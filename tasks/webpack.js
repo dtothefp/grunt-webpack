@@ -37,43 +37,17 @@ module.exports = function(grunt) {
 			mergeFunction
 		).x;
 		[].concat(options).forEach(function(options) {
-			convertPathsForObject(options, ["context", "recordsPath", "recordsInputPath", "recordsOutputPath"])
-			convertPathsForObject(options.output, ["path"]);
-			convertPathsForObject(options.resolve, ["root", "fallback"]);
-			convertPathsForObject(options.resolveLoader, ["root", "fallback"]);
-			if(options.module.loaders) {
-				options.module.loaders.forEach(function(l){
-					convertPathsForObject(l, ["test", "include", "exclude"]);
-				});
-			}
+			options.context = path.resolve(process.cwd(), options.context);
+			options.output.path = path.resolve(process.cwd(), options.output.path);
 		});
 
-		function convertPathsForObject(obj, props){
-			if(obj){
-				props.forEach(function(prop) {
-					if(obj[prop] != undefined) {
-						obj[prop] = convertPath(obj[prop]);
-					}
-				});
-			}
-		}
-
-		function convertPath(pth) {
-			if(_.isString(pth)){
-				return path.resolve(process.cwd(), pth);
-			}
-			else if(_.isArray(pth)){
-				return _.map(pth, function(p){
-					// Arrays of paths can contain a mix of both strings and RegExps
-					if(_.isString(p)){
-						return path.resolve(process.cwd(), p);
-					}
-					return p
-				});
-			}
-			// It may have been a RegExp so just send it back
-			return pth;
-		}
+    function construct(constructor, args) {
+      function F() {
+          return constructor.apply(this, args);
+      }
+      F.prototype = constructor.prototype;
+      return new F();
+    }
 
 		var firstOptions = Array.isArray(options) ? options[0] : options;
 		var target = this.target;
@@ -83,6 +57,23 @@ module.exports = function(grunt) {
 		if(cache) {
 			[].concat(options).forEach(function(o) { o.cache = false; });
 		}
+    var environment = options.environment;
+    if(environment) {
+      options.envPlugins.forEach(function(pluginList) {
+        var pluginEnv = pluginList[0];
+        var pluginConst = pluginList[1];
+        var pluginArgs = pluginList[2];
+        var not = /\!/.test(pluginEnv) && pluginEnv.replace('!', '');
+        if(not && not !== environment || pluginEnv === environment) {
+          options.plugins.push(construct(pluginConst, pluginArgs));
+        }
+      });
+      if(environment !== 'dev' && options.devtool) {
+        delete options.devtool;
+      }
+      delete options.environment;
+      delete options.envPlugins;
+    }
 		var storeStatsTo = firstOptions.storeStatsTo;
 		var statsOptions = firstOptions.stats;
 		var failOnError = firstOptions.failOnError;
