@@ -41,10 +41,12 @@ module.exports = function(grunt) {
       options.output.path = path.resolve(process.cwd(), options.output.path);
     });
 
+    //check environment to remove unwanted config
     if(options.watch && grunt.config.get('environment') !== 'dev') {
       delete options.watch;
     }
 
+    //flatten config for jshint
     if( _.isObject(options.jshint) && !_.isArray(options.jshint) ) {
       _.extend(options.jshint, options.jshint.config.src.options);
       options.jshint.config.tasks[grunt.config.get('environment')].forEach(function(task) {
@@ -56,6 +58,13 @@ module.exports = function(grunt) {
 
       delete options.jshint.config;
     }
+
+    //make the concat banner try catch block and inject the filename as a variable
+    _.each(options.module.preLoaders, function(loaderObj) {
+      if(/inject\-filename\-loader/.test(loaderObj.loader)) {
+        loaderObj.loader = loaderObj.loader + '&banner=' + encodeURIComponent(grunt.config.get('concat_banner')) + '&footer=' + encodeURIComponent(grunt.config.get('concat_footer'));
+      }
+    });
 
     function construct(constructor, args) {
       function F() {
