@@ -82,7 +82,7 @@ module.exports = function(grunt) {
     if(cache) {
       [].concat(options).forEach(function(o) { o.cache = false; });
     }
-    var environment = options.environment;
+    var environment = grunt.config.get('environment');
     if(environment) {
       options.envPlugins.forEach(function(pluginList) {
         var pluginEnv = pluginList[0];
@@ -96,8 +96,8 @@ module.exports = function(grunt) {
       if(environment !== 'dev' && options.devtool) {
         delete options.devtool;
       }
-      delete options.environment;
-      delete options.envPlugins;
+      options.environment && delete options.environment;
+      options.envPlugins && delete options.envPlugins;
     }
     var storeStatsTo = firstOptions.storeStatsTo;
     var statsOptions = firstOptions.stats;
