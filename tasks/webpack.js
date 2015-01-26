@@ -41,6 +41,18 @@ module.exports = function(grunt) {
       options.output.path = path.resolve(process.cwd(), options.output.path);
     });
 
+    if( _.isObject(options.jshint) && !_.isArray(options.jshint) ) {
+      _.extend(options.jshint, options.jshint.config.src.options);
+      options.jshint.config.tasks[grunt.config.get('environment')].forEach(function(task) {
+        _.extend(
+          options.jshint,
+          options.jshint.config.src[task].options
+        );
+      });
+
+      delete options.jshint.config;
+    }
+
     function construct(constructor, args) {
       function F() {
         return constructor.apply(this, args);
