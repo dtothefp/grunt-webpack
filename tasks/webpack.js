@@ -42,7 +42,7 @@ module.exports = function(grunt) {
     });
 
     //check environment to remove unwanted config
-    if(options.watch && grunt.config.get('environment') !== 'dev') {
+    if(options.watch && (grunt.config.get('environment') && grunt.config.get('environment') !== 'dev')) {
       delete options.watch;
     }
 
